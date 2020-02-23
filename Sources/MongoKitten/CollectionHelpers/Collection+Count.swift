@@ -1,8 +1,9 @@
 import MongoCore
+import MongoClient
 import NIO
 
 extension MongoCollection {
-    public func count(_ query: Document? = nil) -> EventLoopFuture<Int> {
+    public func count(_ query: Document? = nil, metadata: CommandMetadata? = nil) -> EventLoopFuture<Int> {
         guard transaction == nil else {
             return makeTransactionError()
         }
@@ -11,12 +12,13 @@ extension MongoCollection {
             return connection.executeCodable(
                 CountCommand(on: self.name, where: query),
                 namespace: self.database.commandNamespace,
-                sessionId: self.sessionId ?? connection.implicitSessionId
+                sessionId: self.sessionId ?? connection.implicitSessionId,
+                metadata: metadata
             )
         }.decode(CountReply.self).map { $0.count }._mongoHop(to: hoppedEventLoop)
     }
     
-    public func count<Query: MongoKittenQuery>(_ query: Query? = nil) -> EventLoopFuture<Int> {
-        return count(query?.makeDocument())
+    public func count<Query: MongoKittenQuery>(_ query: Query? = nil, metadata: CommandMetadata? = nil) -> EventLoopFuture<Int> {
+        return count(query?.makeDocument(), metadata: metadata)
     }
 }

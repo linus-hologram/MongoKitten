@@ -41,6 +41,7 @@ public final class FindQueryBuilder: QueryCursor {
     private let connection: EventLoopFuture<MongoConnection>
     public var command: FindCommand
     private let collection: MongoCollection
+    private var metadata: CommandMetadata?
     public var isDrained: Bool { return false }
 
     public var eventLoop: EventLoop { return connection.eventLoop }
@@ -54,6 +55,11 @@ public final class FindQueryBuilder: QueryCursor {
     public func getConnection() -> EventLoopFuture<MongoConnection> {
         return connection
     }
+    
+    public func metadata(_ metadata: CommandMetadata) -> FindQueryBuilder {
+        self.metadata = metadata
+        return self
+    }
 
     public func execute() -> EventLoopFuture<FinalizedCursor<FindQueryBuilder>> {
         return connection.flatMap { connection in
@@ -61,7 +67,8 @@ public final class FindQueryBuilder: QueryCursor {
                 self.command,
                 namespace: MongoNamespace(to: "$cmd", inDatabase: self.collection.database.name),
                 in: self.collection.transaction,
-                sessionId: self.collection.sessionId ?? connection.implicitSessionId
+                sessionId: self.collection.sessionId ?? connection.implicitSessionId,
+                metadata: self.metadata
             ).flatMapThrowing { reply in
                 let response = try MongoCursorResponse(reply: reply)
                 let cursor = MongoCursor(

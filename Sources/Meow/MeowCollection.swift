@@ -79,11 +79,4 @@ extension MeowCollection where M: MutableModel {
     public func deleteAll<Q: MongoKittenQuery>(where filter: Q) -> EventLoopFuture<DeleteReply> {
         return self.deleteAll(where: filter.makeDocument())
     }
-    
-    //    public func saveChanges(_ changes: PartialChange<M>) -> EventLoopFuture<UpdateReply> {
-    //        return raw.updateOne(where: "_id" == changes.entity, to: [
-    //            "$set": changes.changedFields,
-    //            "$unset": changes.removedFields
-    //        ])
-    //    }
 }

@@ -1,10 +1,12 @@
 import NIO
+import MongoClient
 import MongoCore
 
 extension MongoCollection {
     public func updateOne(
         where query: Document,
-        to document: Document
+        to document: Document,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             let request = UpdateCommand.UpdateRequest(where: query, to: document)
@@ -14,24 +16,28 @@ extension MongoCollection {
                 command,
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
-                sessionId: self.sessionId ?? connection.implicitSessionId
+                sessionId: self.sessionId ?? connection.implicitSessionId,
+                metadata: metadata
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
     
     public func updateOne<Query: MongoKittenQuery>(
         where query: Query,
-        to document: Document
+        to document: Document,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<UpdateReply> {
         return updateOne(
             where: query.makeDocument(),
-            to: document
+            to: document,
+            metadata: metadata
         )
     }
     
     public func updateMany(
         where query: Document,
-        to document: Document
+        to document: Document,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             var request = UpdateCommand.UpdateRequest(where: query, to: document)
@@ -42,7 +48,8 @@ extension MongoCollection {
                 command,
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
-                sessionId: self.sessionId ?? connection.implicitSessionId
+                sessionId: self.sessionId ?? connection.implicitSessionId,
+                metadata: metadata
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
@@ -60,7 +67,8 @@ extension MongoCollection {
     public func updateMany(
         where query: Document,
         setting: Document?,
-        unsetting: Document?
+        unsetting: Document?,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             var request = UpdateCommand.UpdateRequest(where: query, setting: setting, unsetting: unsetting)
@@ -72,12 +80,17 @@ extension MongoCollection {
                 command,
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
-                sessionId: self.sessionId ?? connection.implicitSessionId
+                sessionId: self.sessionId ?? connection.implicitSessionId,
+                metadata: metadata
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
     
-    public func upsert(_ document: Document, where query: Document) -> EventLoopFuture<UpdateReply> {
+    public func upsert(
+        _ document: Document,
+        where query: Document,
+        metadata: CommandMetadata? = nil
+    ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             var request = UpdateCommand.UpdateRequest(where: query, to: document)
             request.multi = false
@@ -89,7 +102,8 @@ extension MongoCollection {
                 command,
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
-                sessionId: self.sessionId ?? connection.implicitSessionId
+                sessionId: self.sessionId ?? connection.implicitSessionId,
+                metadata: metadata
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }

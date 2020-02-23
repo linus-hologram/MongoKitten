@@ -40,24 +40,7 @@ public final class MongoCollection {
             MongoKittenError(.unsupportedFeatureByServer, reason: .transactionForUnsupportedQuery)
         )
     }
-
-//    internal func makeTransactionQueryOptions() -> MongoTransactionOptions? {
-//        guard let transaction = transaction else {
-//            return nil
-//        }
-//
-//        defer {
-//            transaction.started = true
-//            transaction.active = true
-//        }
-//
-//        return TransactionQueryOptions(
-//            id: transaction.id,
-//            startTransaction: !transaction.started,
-//            autocommit: transaction.autocommit ?? false
-//        )
-//    }
-
+    
     internal var pool: MongoConnectionPool {
         return self.database.pool
     }
