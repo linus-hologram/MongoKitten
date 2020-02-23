@@ -9,12 +9,19 @@ extension MongoConnection {
         _ command: E,
         namespace: MongoNamespace,
         in transaction: MongoTransaction? = nil,
-        sessionId: SessionIdentifier?
+        sessionId: SessionIdentifier?,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<MongoServerReply> {
         do {
             let request = try BSONEncoder().encode(command)
 
-            return execute(request, namespace: namespace)
+            return execute(
+                request,
+                namespace: namespace,
+                in: transaction,
+                sessionId: sessionId,
+                metadata: metadata
+            )
         } catch {
             self.logger.error("Unable to encode MongoDB request")
             return eventLoop.makeFailedFuture(error)
@@ -25,7 +32,8 @@ extension MongoConnection {
         _ command: Document,
         namespace: MongoNamespace,
         in transaction: MongoTransaction? = nil,
-        sessionId: SessionIdentifier? = nil
+        sessionId: SessionIdentifier? = nil,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<MongoServerReply> {
         let result: EventLoopFuture<MongoServerReply>
         
@@ -33,9 +41,21 @@ extension MongoConnection {
             let serverHandshake = serverHandshake,
             serverHandshake.maxWireVersion.supportsOpMessage
         {
-            result = executeOpMessage(command, namespace: namespace)
+            result = executeOpMessage(
+                command,
+                namespace: namespace,
+                in: transaction,
+                sessionId: sessionId,
+                metadata: metadata
+            )
         } else {
-            result = executeOpQuery(command, namespace: namespace)
+            result = executeOpQuery(
+                command,
+                namespace: namespace,
+                in: transaction,
+                sessionId: sessionId,
+                metadata: metadata
+            )
         }
 
         if let queryTimer = queryTimer {
@@ -48,11 +68,7 @@ extension MongoConnection {
         return result
     }
     
-    public func executeOpQuery(
-        _ query: inout OpQuery,
-        in transaction: MongoTransaction? = nil,
-        sessionId: SessionIdentifier? = nil
-    ) -> EventLoopFuture<OpReply> {
+    public func executeOpQuery(_ query: inout OpQuery) -> EventLoopFuture<OpReply> {
         query.header.requestId = nextRequestId()
         return executeMessage(query).flatMapThrowing { reply in
             guard case .reply(let reply) = reply else {
@@ -65,9 +81,7 @@ extension MongoConnection {
     }
     
     public func executeOpMessage(
-        _ query: inout OpMessage,
-        in transaction: MongoTransaction? = nil,
-        sessionId: SessionIdentifier? = nil
+        _ query: inout OpMessage
     ) -> EventLoopFuture<OpMessage> {
         query.header.requestId = nextRequestId()
         return executeMessage(query).flatMapThrowing { reply in
@@ -83,12 +97,21 @@ extension MongoConnection {
     internal func executeOpQuery(
         _ command: Document,
         namespace: MongoNamespace,
-        sessionId: SessionIdentifier? = nil
+        in transaction: MongoTransaction? = nil,
+        sessionId: SessionIdentifier? = nil,
+        metadata: CommandMetadata? = nil
     ) -> EventLoopFuture<MongoServerReply> {
         var command = command
         
         if let id = sessionId?.id {
             command["lsid"]["id"] = id
+        }
+        
+        // FIXME: Transactions
+        
+        if self.supportsCommandMetadata, let metadata = metadata {
+            command["$mongokitten"] = try? BSONEncoder().encode(metadata)
+            command["$mongokitten"]["appName"] = self.applicationName
         }
         
         return executeMessage(
@@ -103,14 +126,20 @@ extension MongoConnection {
     internal func executeOpMessage(
         _ command: Document,
         namespace: MongoNamespace,
-        in transaction: MongoTransaction? = nil,
-        sessionId: SessionIdentifier? = nil
+        in transaction: MongoTransaction?,
+        sessionId: SessionIdentifier?,
+        metadata: CommandMetadata?
     ) -> EventLoopFuture<MongoServerReply> {
         var command = command
         command["$db"] = namespace.databaseName
         
         if let id = sessionId?.id {
             command["lsid"]["id"] = id
+        }
+        
+        if self.supportsCommandMetadata, let metadata = metadata {
+            command["$mongokitten"] = try? BSONEncoder().encode(metadata)
+            command["$mongokitten"]["appName"] = self.applicationName
         }
         
         // TODO: When retrying a write, don't resend transaction messages except commit & abort
@@ -122,6 +151,7 @@ extension MongoConnection {
                 command["startTransaction"] = true
             }
         }
+        
         return executeMessage(
             OpMessage(
                 body: command,

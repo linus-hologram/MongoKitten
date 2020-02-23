@@ -42,6 +42,9 @@ public final class MongoConnection {
     public var serverHandshake: ServerHandshake? {
         return context.serverHandshake
     }
+    
+    internal private(set) var supportsCommandMetadata = false
+    internal private(set) var applicationName = "MongoKitten 6"
 
     public var closeFuture: EventLoopFuture<Void> {
         return channel.closeFuture
@@ -119,6 +122,10 @@ public final class MongoConnection {
                     context: context,
                     sessionManager: sessionManager
                 )
+                
+                if let applicationName = settings.applicationName {
+                    connection.applicationName = applicationName
+                }
 
                 return connection.authenticate(
                     clientDetails: clientDetails,
@@ -188,6 +195,15 @@ public final class MongoConnection {
 
     public func close() -> EventLoopFuture<Void> {
         return self.channel.close()
+    }
+    
+    @discardableResult
+    internal func integrateWithApp() -> EventLoopFuture<Void> {
+        return self.executeCodable(
+            ["mongokitten": 1],
+            namespace: .administrativeCommand,
+            sessionId: nil
+        ).decode(OK.self).map { _ in }
     }
 
     deinit {

@@ -19,6 +19,7 @@ public final class MongoCluster: MongoConnectionPool {
     }
 
     private var dns: DNSClient?
+    private var integratedWithApp = false
     public let logger: Logger
     public let sessionManager = MongoSessionManager()
 
@@ -237,6 +238,8 @@ public final class MongoCluster: MongoConnectionPool {
 
                 me.remove(connectionId: connectionId, error: MongoError(.queryFailure, reason: .connectionClosed))
             }
+            
+            connection.integrateWithApp()
 
             return PooledConnection(host: host, connection: connection)
         }
@@ -381,6 +384,16 @@ public final class MongoCluster: MongoConnectionPool {
 
             return self.next(for: MongoConnectionPoolRequest(writable: false)).map { _ in }
         }
+    }
+    
+    @discardableResult
+    public func integrateWithApp() -> EventLoopFuture<Void> {
+        self.integratedWithApp = true
+        let done = pool.map { pooledConnection in
+            return pooledConnection.connection.integrateWithApp()
+        }
+        
+        return EventLoopFuture.andAllSucceed(done, on: eventLoop)
     }
 }
 

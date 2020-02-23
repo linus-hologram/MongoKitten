@@ -8,5 +8,9 @@ internal struct OK: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.ok = try container.decode(Int.self, forKey: .ok)
+        
+        guard ok == 1 else {
+            throw try MongoGenericErrorReply(from: decoder)
+        }
     }
 }
