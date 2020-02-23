@@ -3,7 +3,7 @@ import MongoClient
 import MongoKittenCore
 
 extension MongoCollection {
-    public func find(_ query: Document = [:]) -> FindQueryBuilder {
+    public func find(_ query: Document = [:], file: StaticString = #file, line: UInt = #line) -> FindQueryBuilder {
         return FindQueryBuilder(
             command: FindCommand(
                 filter: query,
@@ -11,27 +11,27 @@ extension MongoCollection {
             ),
             collection: self,
             connection: pool.next(for: .basic)
-        )
+        ).metadata(CommandMetadata(file: file, line: line))
     }
     
     public func find<Query: MongoKittenQuery>(_ query: Query) -> FindQueryBuilder {
         return find(query.makeDocument())
     }
 
-    public func findOne<D: Decodable>(_ query: Document = [:], as type: D.Type) -> EventLoopFuture<D?> {
-        return find(query).limit(1).decode(type).firstResult()
+    public func findOne<D: Decodable>(_ query: Document = [:], as type: D.Type, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<D?> {
+        return find(query, file: file, line: line).limit(1).decode(type).firstResult()
     }
     
-    public func findOne<D: Decodable, Query: MongoKittenQuery>(_ query: Query, as type: D.Type) -> EventLoopFuture<D?> {
-        return findOne(query.makeDocument(), as: type)
+    public func findOne<D: Decodable, Query: MongoKittenQuery>(_ query: Query, as type: D.Type, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<D?> {
+        return findOne(query.makeDocument(), as: type, file: file, line: line)
     }
 
-    public func findOne(_ query: Document = [:]) -> EventLoopFuture<Document?> {
-        return find(query).limit(1).firstResult()
+    public func findOne(_ query: Document = [:], file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<Document?> {
+        return find(query, file: file, line: line).limit(1).firstResult()
     }
     
-    public func findOne<Query: MongoKittenQuery>(_ query: Query) -> EventLoopFuture<Document?> {
-        return findOne(query.makeDocument())
+    public func findOne<Query: MongoKittenQuery>(_ query: Query, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<Document?> {
+        return findOne(query.makeDocument(), file: file, line: line)
     }
 }
 

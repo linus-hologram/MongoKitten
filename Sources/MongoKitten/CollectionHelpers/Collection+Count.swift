@@ -3,7 +3,7 @@ import MongoClient
 import NIO
 
 extension MongoCollection {
-    public func count(_ query: Document? = nil, metadata: CommandMetadata? = nil) -> EventLoopFuture<Int> {
+    public func count(_ query: Document? = nil, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<Int> {
         guard transaction == nil else {
             return makeTransactionError()
         }
@@ -13,12 +13,12 @@ extension MongoCollection {
                 CountCommand(on: self.name, where: query),
                 namespace: self.database.commandNamespace,
                 sessionId: self.sessionId ?? connection.implicitSessionId,
-                metadata: metadata
+                metadata: CommandMetadata(file: file, line: line)
             )
         }.decode(CountReply.self).map { $0.count }._mongoHop(to: hoppedEventLoop)
     }
     
-    public func count<Query: MongoKittenQuery>(_ query: Query? = nil, metadata: CommandMetadata? = nil) -> EventLoopFuture<Int> {
-        return count(query?.makeDocument(), metadata: metadata)
+    public func count<Query: MongoKittenQuery>(_ query: Query? = nil, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<Int> {
+        return count(query?.makeDocument(), file: file, line: line)
     }
 }

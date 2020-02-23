@@ -52,9 +52,10 @@ public struct AggregateBuilder {
 }
 
 extension MongoCollection {
-    public func buildAggregate(@AggregateBuilder build: () -> AggregateBuilderStage) -> AggregateBuilderPipeline {
+    public func buildAggregate(file: StaticString = #file, line: UInt = #line, @AggregateBuilder build: () -> AggregateBuilderStage) -> AggregateBuilderPipeline {
         var pipeline = AggregateBuilderPipeline(stages: [build()])
         pipeline.collection = self
+        pipeline._metadata = CommandMetadata(file: file, line: line)
         return pipeline
     }
 }

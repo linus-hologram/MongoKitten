@@ -16,28 +16,28 @@ public struct MeowCollection<M: BaseModel> {
 }
 
 extension MeowCollection where M: ReadableModel {
-    public func find(where filter: Document = [:]) -> MappedCursor<FindQueryBuilder, M> {
+    public func find(where filter: Document = [:], file: StaticString = #file, line: UInt = #line) -> MappedCursor<FindQueryBuilder, M> {
         return raw.find(filter).decode(M.self)
     }
     
-    public func find<Q: MongoKittenQuery>(where filter: Q) -> MappedCursor<FindQueryBuilder, M> {
-        return self.find(where: filter.makeDocument())
+    public func find<Q: MongoKittenQuery>(where filter: Q, file: StaticString = #file, line: UInt = #line) -> MappedCursor<FindQueryBuilder, M> {
+        return self.find(where: filter.makeDocument(), file: file, line: line)
     }
     
-    public func findOne(where filter: Document) -> EventLoopFuture<M?> {
-        return raw.findOne(filter, as: M.self)
+    public func findOne(where filter: Document, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<M?> {
+        return raw.findOne(filter, as: M.self, file: file, line: line)
     }
     
-    public func findOne<Q: MongoKittenQuery>(where filter: Q) -> EventLoopFuture<M?> {
-        return raw.findOne(filter, as: M.self)
+    public func findOne<Q: MongoKittenQuery>(where filter: Q, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<M?> {
+        return raw.findOne(filter, as: M.self, file: file, line: line)
     }
     
-    public func count(where filter: Document) -> EventLoopFuture<Int> {
-        return raw.count(filter)
+    public func count(where filter: Document, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<Int> {
+        return raw.count(filter, file: file, line: line)
     }
     
-    public func count<Q: MongoKittenQuery>(where filter: Q) -> EventLoopFuture<Int> {
-        return self.count(where: filter.makeDocument())
+    public func count<Q: MongoKittenQuery>(where filter: Q, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<Int> {
+        return self.count(where: filter.makeDocument(), file: file, line: line)
     }
     
     public func watch() -> EventLoopFuture<ChangeStream<M>> {
@@ -46,37 +46,37 @@ extension MeowCollection where M: ReadableModel {
 }
 
 extension MeowCollection where M: MutableModel {
-    public func insert(_ instance: M) -> EventLoopFuture<InsertReply> {
+    public func insert(_ instance: M, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<InsertReply> {
         do {
             let document = try instance.encode(to: Document.self)
-            return raw.insert(document)
+            return raw.insert(document, file: file, line: line)
         } catch {
             return database.eventLoop.makeFailedFuture(error)
         }
     }
     
-    public func upsert(_ instance: M) -> EventLoopFuture<UpdateReply> {
+    public func upsert(_ instance: M, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<UpdateReply> {
         do {
             let document = try instance.encode(to: Document.self)
-            return raw.upsert(document, where: "_id" == instance._id)
+            return raw.upsert(document, where: "_id" == instance._id, file: file, line: line)
         } catch {
             return database.eventLoop.makeFailedFuture(error)
         }
     }
     
-    public func deleteOne(where filter: Document) -> EventLoopFuture<DeleteReply> {
-        return raw.deleteOne(where: filter)
+    public func deleteOne(where filter: Document, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<DeleteReply> {
+        return raw.deleteOne(where: filter, file: file, line: line)
     }
     
-    public func deleteOne<Q: MongoKittenQuery>(where filter: Q) -> EventLoopFuture<DeleteReply> {
-        return self.deleteOne(where: filter.makeDocument())
+    public func deleteOne<Q: MongoKittenQuery>(where filter: Q, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<DeleteReply> {
+        return self.deleteOne(where: filter.makeDocument(), file: file, line: line)
     }
     
-    public func deleteAll(where filter: Document) -> EventLoopFuture<DeleteReply> {
-        return raw.deleteAll(where: filter)
+    public func deleteAll(where filter: Document, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<DeleteReply> {
+        return raw.deleteAll(where: filter, file: file, line: line)
     }
     
-    public func deleteAll<Q: MongoKittenQuery>(where filter: Q) -> EventLoopFuture<DeleteReply> {
-        return self.deleteAll(where: filter.makeDocument())
+    public func deleteAll<Q: MongoKittenQuery>(where filter: Q, file: StaticString = #file, line: UInt = #line) -> EventLoopFuture<DeleteReply> {
+        return self.deleteAll(where: filter.makeDocument(), file: file, line: line)
     }
 }

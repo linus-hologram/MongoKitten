@@ -17,7 +17,7 @@ public struct AggregateBuilderPipeline: QueryCursor {
     internal var _comment: String?
     internal var _allowDiskUse: Bool?
     internal var _collation: Collation?
-    private var metadata: CommandMetadata?
+    internal var _metadata: CommandMetadata?
     internal var _readConcern: ReadConcern?
     
     public var eventLoop: EventLoop { return collection.eventLoop }
@@ -69,7 +69,7 @@ public struct AggregateBuilderPipeline: QueryCursor {
     
     public func metadata(_ metadata: CommandMetadata) -> AggregateBuilderPipeline {
         var pipeline = self
-        pipeline.metadata = metadata
+        pipeline._metadata = metadata
         return pipeline
     }
     
@@ -86,7 +86,7 @@ public struct AggregateBuilderPipeline: QueryCursor {
                 namespace: self.collection.database.commandNamespace,
                 in: self.collection.transaction,
                 sessionId: self.collection.sessionId ?? connection.implicitSessionId,
-                metadata: self.metadata
+                metadata: self._metadata
             ).decode(CursorReply.self).map { cursor in
                 let cursor = MongoCursor(
                     reply: cursor.cursor,

@@ -6,7 +6,7 @@ extension MongoCollection {
     public func updateOne(
         where query: Document,
         to document: Document,
-        metadata: CommandMetadata? = nil
+        file: StaticString = #file, line: UInt = #line
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             let request = UpdateCommand.UpdateRequest(where: query, to: document)
@@ -17,7 +17,7 @@ extension MongoCollection {
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
                 sessionId: self.sessionId ?? connection.implicitSessionId,
-                metadata: metadata
+                metadata: CommandMetadata(file: file, line: line)
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
@@ -25,19 +25,20 @@ extension MongoCollection {
     public func updateOne<Query: MongoKittenQuery>(
         where query: Query,
         to document: Document,
-        metadata: CommandMetadata? = nil
+        file: StaticString = #file, line: UInt = #line
     ) -> EventLoopFuture<UpdateReply> {
         return updateOne(
             where: query.makeDocument(),
             to: document,
-            metadata: metadata
+            file: file,
+            line: line
         )
     }
     
     public func updateMany(
         where query: Document,
         to document: Document,
-        metadata: CommandMetadata? = nil
+        file: StaticString = #file, line: UInt = #line
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             var request = UpdateCommand.UpdateRequest(where: query, to: document)
@@ -49,18 +50,21 @@ extension MongoCollection {
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
                 sessionId: self.sessionId ?? connection.implicitSessionId,
-                metadata: metadata
+                metadata: CommandMetadata(file: file, line: line)
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
     
     public func updateMany<Query: MongoKittenQuery>(
         where query: Query,
-        to document: Document
+        to document: Document,
+        file: StaticString = #file, line: UInt = #line
     ) -> EventLoopFuture<UpdateReply> {
         return updateMany(
             where: query.makeDocument(),
-            to: document
+            to: document,
+            file: file,
+            line: line
         )
     }
     
@@ -68,7 +72,7 @@ extension MongoCollection {
         where query: Document,
         setting: Document?,
         unsetting: Document?,
-        metadata: CommandMetadata? = nil
+        file: StaticString = #file, line: UInt = #line
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             var request = UpdateCommand.UpdateRequest(where: query, setting: setting, unsetting: unsetting)
@@ -81,7 +85,7 @@ extension MongoCollection {
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
                 sessionId: self.sessionId ?? connection.implicitSessionId,
-                metadata: metadata
+                metadata: CommandMetadata(file: file, line: line)
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
@@ -89,7 +93,7 @@ extension MongoCollection {
     public func upsert(
         _ document: Document,
         where query: Document,
-        metadata: CommandMetadata? = nil
+        file: StaticString = #file, line: UInt = #line
     ) -> EventLoopFuture<UpdateReply> {
         return pool.next(for: .basic).flatMap { connection in
             var request = UpdateCommand.UpdateRequest(where: query, to: document)
@@ -103,7 +107,7 @@ extension MongoCollection {
                 namespace: self.database.commandNamespace,
                 in: self.transaction,
                 sessionId: self.sessionId ?? connection.implicitSessionId,
-                metadata: metadata
+                metadata: CommandMetadata(file: file, line: line)
             )
         }.decode(UpdateReply.self)._mongoHop(to: hoppedEventLoop)
     }
