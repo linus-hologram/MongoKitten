@@ -203,7 +203,9 @@ public final class MongoConnection {
             ["mongokitten": 1],
             namespace: .administrativeCommand,
             sessionId: nil
-        ).decode(OK.self).map { _ in }
+        ).decode(OK.self).map { _ in
+            self.supportsCommandMetadata = true
+        }
     }
 
     deinit {
