@@ -14,13 +14,24 @@ A fast, pure swift [MongoDB](https://mongodb.com) driver based on [Swift NIO](ht
 
 # 🐈 Community
 
-[Join our slack here](https://slackpass.io/openkitten) and become a part of the welcoming community.
+[Join our slack here](https://slackpass.io/openkitten) and become a part of the welcoming community. Or [join discord](https://discord.gg/H6799jh) if you prefer that. Slack is by far the biggest community.
+
+### Projects
+
+A couple of MongoKitten based projects have arisen, check them out!
+
+- [Fluent MongoDB](https://github.com/vapor/fluent-mongo-driver)
+- [MongoDB Queues](https://github.com/vapor-community/queues-mongo-driver)
 
 # 🤝 How to help
 
 ## Support MongoKitten development
 
 [You can sponsor us via GitHub.](https://github.com/sponsors/Joannis). This enables us to provide a higher quality and more documentation as well as building more tools.
+
+#### Backers
+
+<a href="https://github.com/Andrewangeta"><img src="https://avatars2.githubusercontent.com/u/12012815?s=460&u=ed30851422c52b43608cf1b3d654c1c921006910&v=4" width="128" height="128" /></a> <a href="https://github.com/piers12"><img src="https://avatars1.githubusercontent.com/u/37227905?s=460&u=2f33baff0e70c4194c801e1bc9a2b416e8cf5909&v=4" width="128" height="128" /></a> <a href="https://github.com/ultim8p"><img src="https://avatars3.githubusercontent.com/u/4804985?s=460&v=4" width="128" height="128" /></a>
 
 ## The App
 
@@ -32,6 +43,7 @@ A fast, pure swift [MongoDB](https://mongodb.com) driver based on [Swift NIO](ht
 
 ## Contribute to MongoKitten
 
+- [Donate](https://github.com/sponsors/Joannis) so that we can spend more time on improving the docs.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for info on contributing to MongoKitten
 - You can help us out by resolving TODOs and replying on issues
 - Of course, all feedback, positive and negative, also really helps to improve the project
@@ -71,8 +83,6 @@ let db = try MongoDatabase.synchronousConnect("mongodb://localhost/my_database")
 Vapor users should register the database as a service.
 
 ```swift
-let connectionURI = "mongodb://localhost"
-
 extension Request {
     public var mongoDB: MongoDatabase {
         return application.mongoDB.hopped(to: eventLoop)
@@ -234,7 +244,7 @@ users.find()
 ### Update
 
 ```swift
-users.update(where: "username" == "kitty", setting: ["age": 3]).whenSuccess { _ in
+users.updateMany(where: "username" == "kitty", setting: ["age": 3]).whenSuccess { _ in
 	print("🐈")
 }
 ```
