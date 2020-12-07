@@ -92,7 +92,7 @@ public struct ChangeStreamNotification<T: Decodable>: Decodable {
     
     public let _id: Document
     public let operationType: OperationType
-    public let ns: ChangeStreamNamespace?
+    public let ns: ChangeStreamNamespace
     public let documentKey: Document?
     public let updateDescription: UpdateDescription?
     public let fullDocument: T?
