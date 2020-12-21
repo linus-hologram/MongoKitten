@@ -31,15 +31,33 @@ public struct MongoHandshakeResult {
 public final class MongoConnection {
     /// The NIO channel
     private let channel: Channel
-    public var logger: Logger { context.logger }
+    private var _logger: Logger?
+    public private(set) var logger: Logger {
+        get { _logger ?? context.logger }
+        set { _logger = newValue }
+    }
     var queryTimer: Metrics.Timer?
     public internal(set) var lastHeartbeat: MongoHandshakeResult?
     public var queryTimeout: TimeAmount = .seconds(30)
+    internal var connectionName: String? {
+        didSet {
+            logger[metadataKey: "connection-id"] = "\(connectionName ?? "root")"
+        }
+    }
+    private var connectionLabelPrefix: String {
+        if let connectionName = connectionName {
+            return "org.openkitten.mongocore.cluster.\(connectionName)."
+        } else {
+            return "org.openkitten.mongocore.connection"
+        }
+    }
     
     public var isMetricsEnabled = false {
         didSet {
             if isMetricsEnabled, !oldValue {
-                queryTimer = Metrics.Timer(label: "org.openkitten.mongokitten.core.queries")
+                queryTimer = Metrics.Timer(
+                    label: connectionLabelPrefix + "query-duration"
+                )
             } else {
                 queryTimer = nil
             }
@@ -80,6 +98,10 @@ public final class MongoConnection {
         self.sessionManager = sessionManager
         self.channel = channel
         self.context = context
+        
+        channel.closeFuture.whenComplete { [weak self] _ in
+            self?.logger.info("Connection Closed")
+        }
     }
     
     public static func addHandlers(to channel: Channel, context: MongoClientContext) -> EventLoopFuture<Void> {

@@ -16,7 +16,7 @@ extension MongoConnection {
 
             return execute(request, namespace: namespace, in: transaction, sessionId: sessionId)
         } catch {
-            self.logger.error("Unable to encode MongoDB request")
+            self.logger.error("Unable to encode MongoDB request. \(error)")
             return eventLoop.makeFailedFuture(error)
         }
     }
@@ -36,13 +36,6 @@ extension MongoConnection {
             result = executeOpMessage(command, namespace: namespace, in: transaction, sessionId: sessionId)
         } else {
             result = executeOpQuery(command, namespace: namespace, in: transaction, sessionId: sessionId)
-        }
-
-        if let queryTimer = queryTimer {
-            let date = Date()
-            result.whenComplete { _ in
-                queryTimer.record(-date.timeIntervalSinceNow)
-            }
         }
         
         return result
@@ -80,15 +73,18 @@ extension MongoConnection {
         }
     }
 
-    internal func executeOpQuery(
+    fileprivate func executeOpQuery(
         _ command: Document,
         namespace: MongoNamespace,
         in transaction: MongoTransaction? = nil,
         sessionId: SessionIdentifier? = nil
     ) -> EventLoopFuture<MongoServerReply> {
+        self.logger.trace("Forming OpQuery")
+        
         var command = command
         
         if let id = sessionId?.id {
+            self.logger.trace("Session ID \(id)")
             // TODO: This is memory heavy
             command["lsid"]["id"] = id
         }
@@ -99,19 +95,22 @@ extension MongoConnection {
                 requestId: self.nextRequestId(),
                 fullCollectionName: namespace.fullCollectionName
             )
-        )
+        ).recordInterval(to: queryTimer)
     }
 
-    internal func executeOpMessage(
+    fileprivate func executeOpMessage(
         _ command: Document,
         namespace: MongoNamespace,
         in transaction: MongoTransaction? = nil,
         sessionId: SessionIdentifier? = nil
     ) -> EventLoopFuture<MongoServerReply> {
+        self.logger.trace("Forming OpMessage")
         var command = command
+        
         command["$db"] = namespace.databaseName
         
         if let id = sessionId?.id {
+            self.logger.trace("Session ID \(id)")
             // TODO: This is memory heavy
             command["lsid"]["id"] = id
         }
@@ -123,13 +122,29 @@ extension MongoConnection {
 
             if transaction.startTransaction() {
                 command["startTransaction"] = true
+                self.logger.info("Starting Transaction with ID: \(transaction.number)")
             }
         }
+        
         return self.executeMessage(
             OpMessage(
                 body: command,
                 requestId: self.nextRequestId()
             )
-        )
+        ).recordInterval(to: queryTimer)
+    }
+}
+
+extension EventLoopFuture {
+    func recordInterval(to timer: Timer?) -> Self {
+        if let timer = timer {
+            let start = DispatchTime.now()
+            
+            self.whenComplete { _ in
+                timer.recordInterval(since: start, end: .now())
+            }
+        }
+        
+        return self
     }
 }

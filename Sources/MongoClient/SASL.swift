@@ -19,7 +19,7 @@ public struct CachedCredentials: Codable {
         case first = 1
     }
     
-    let version: CachedCredentialsVersion = .first
+    var version: CachedCredentialsVersion = .first
     let credentials: [String: Credentials]
 }
 

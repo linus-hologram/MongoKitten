@@ -29,7 +29,9 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     
         // 📈
-        .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0" ..< "3.0.0"),        
+        .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0" ..< "3.0.0"),
+        
+//        .package(url: "https://github.com/apple/swift-distributed-tracing.git", "1.0.0" ..< "3.0.0"),
         
         // 💾
         .package(url: "https://github.com/OpenKitten/BSON.git", from: "7.0.0"),
@@ -50,9 +52,9 @@ let package = Package(
         .target(
             name: "MongoCore",
             dependencies: ["BSON", "_MongoKittenCrypto", "NIO", "Logging", "Metrics"]),
-            .target(
-                name: "MongoKittenCore",
-                dependencies: ["MongoClient"]),
+        .target(
+            name: "MongoKittenCore",
+            dependencies: ["MongoClient"]),
         .target(
             name: "MongoKitten",
             dependencies: ["MongoClient", "MongoKittenCore"]),

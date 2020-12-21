@@ -60,13 +60,3 @@ public final class MongoClientContext {
         self.logger = logger
     }
 }
-
-struct MongoClientRequest<Request: MongoRequestMessage> {
-    let command: Request
-    let namespace: MongoNamespace
-    
-    init(command: Request, namespace: MongoNamespace) {
-        self.command = command
-        self.namespace = namespace
-    }
-}

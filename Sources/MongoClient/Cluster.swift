@@ -20,8 +20,14 @@ public final class MongoCluster: MongoConnectionPool {
 
     private var dns: DNSClient?
     public var didRediscover: (() -> ())?
+    private var connectionId: UInt = 0
     public let logger: Logger
     public let sessionManager = MongoSessionManager()
+    
+    fileprivate func nextConnectionId() -> UInt {
+        defer { connectionId = connectionId &+ 1}
+        return connectionId
+    }
 
     /// The interval at which cluster discovery is triggered, at a minimum of 500 milliseconds
     ///
@@ -246,6 +252,7 @@ public final class MongoCluster: MongoConnectionPool {
             resolver: self.dns,
             sessionManager: sessionManager
         ).map { connection -> PooledConnection in
+            connection.connectionName = "connection-\(self.nextConnectionId())"
             connection.slaveOk = self.slaveOk
 
             /// Ensures we default to the cluster's lowest version
