@@ -7,7 +7,7 @@ public final class MongoTransactionDatabase: MongoDatabase {
                 in: self.transaction,
                 sessionId: self.sessionId
             ).decodeReply(OK.self).map { _ in }
-        }
+        }._mongoHop(to: self.hoppedEventLoop)
     }
     
     public func abort() -> EventLoopFuture<Void> {
@@ -18,18 +18,18 @@ public final class MongoTransactionDatabase: MongoDatabase {
                 in: self.transaction,
                 sessionId: self.sessionId
             ).decodeReply(OK.self).map { _ in }
-        }
+        }._mongoHop(to: self.hoppedEventLoop)
     }
 }
 
 struct CommitTransaction: Codable {
-    let commitTransaction = 1
+    private(set) var commitTransaction = 1
     
     init() {}
 }
 
 struct AbortTransaction: Codable {
-    let abortTransaction = 1
+    private(set) var abortTransaction = 1
     
     init() {}
 }
@@ -40,6 +40,8 @@ internal struct OK: Decodable {
     }
     
     private let ok: Int
+
+    public var isSuccessful: Bool { ok == 1 }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)

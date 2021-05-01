@@ -4,7 +4,7 @@
 
 ![OpenKitten](assets/Descriptions.gif)
 
-[Installation](#-installation) | [Basic usage](#-basic-usage) | [About BSON](#-about-bson--documents) | [Codable](#-codable) | [Community](#-community) | [How to help](#-how-to-help)
+[Installation](#-installation) | [Tutorial](https://www.raywenderlich.com/10521463-server-side-swift-with-mongodb-getting-started) | [Basic usage](#-basic-usage) | [About BSON](#-about-bson--documents) | [Codable](#-codable) | [Community](#-community) | [How to help](#-how-to-help)
 
 </p>
 
@@ -37,9 +37,9 @@ A couple of MongoKitten based projects have arisen, check them out!
 
 [MongoKitten App](https://apps.apple.com/us/app/mongokitten/id1484086700) can help you browse your dataset, support customers and debug complex aggregates.
 
-## The Company
+## The Person
 
-[Autimatisering](https://autimatisering.nl/) is the company currently backing MongoKitten. [Hire us](mailto:hoi@autimatisering.nl)
+I'm a freelancer, actively improving the MongoKitten ecosystem. [Hire me!](mailto:joannis@orlandos.nl)
 
 ## Contribute to MongoKitten
 
@@ -70,7 +70,18 @@ MongoKitten supports the [Swift Package Manager](https://swift.org/getting-start
 
 Also, don't forget to add `"MongoKitten"` as a dependency for your target.
 
+# FAQ
+
+<details>
+  <summary>I can't connect to MongoDB, authentication fails!</summary>
+  
+  1. Make sure you've specified `authSource=admin`, unless you know what your authSource is. MongoDB's default value is really confusing.
+  2. If you've specified an `authMechanism`, try removing it. MongoKitten can detect the correct one automatically.
+</details>
+
 # 🚲 Basic usage
+
+Check out my [Ray Wenderlich Article](https://www.raywenderlich.com/10521463-server-side-swift-with-mongodb-getting-started) to learn the basics!
 
 ## Connect to your database
 

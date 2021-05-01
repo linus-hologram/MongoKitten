@@ -27,7 +27,7 @@ public class MongoDatabase {
     public let pool: MongoConnectionPool
 
     /// The collection to execute commands on
-    internal var commandNamespace: MongoNamespace {
+    public var commandNamespace: MongoNamespace {
         return MongoNamespace(to: "$cmd", inDatabase: self.name)
     }
     
@@ -186,6 +186,7 @@ public class MongoDatabase {
         
         let db = MongoTransactionDatabase(named: self.name, pool: self.pool)
         db.transaction = transaction
+        db.hoppedEventLoop = hoppedEventLoop
         db.session = newSession
         return db
     }
@@ -296,7 +297,13 @@ extension EventLoopFuture where Value == MongoServerReply {
     public func decodeReply<D: Decodable>(_ type: D.Type) -> EventLoopFuture<D> {
         return flatMapThrowing { reply in
             do {
-                return try D(reply: reply)
+                let ok = try OK(reply: reply)
+
+                if ok.isSuccessful {
+                    return try D(reply: reply)
+                } else {
+                    throw try MongoGenericErrorReply(reply: reply)
+                }
             } catch {
                 throw try MongoGenericErrorReply(reply: reply)
             }
